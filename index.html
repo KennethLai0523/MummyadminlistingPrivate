@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Private Property Notes</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+
+    h1 {
+      margin-bottom: 20px;
+    }
+
+    .search-box {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+      box-sizing: border-box;
+    }
+
+    .listing-container {
+      display: grid;
+      gap: 16px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+
+    .property-name {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+
+    .btn-group {
+      margin-bottom: 10px;
+    }
+
+    button {
+      background: black;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-right: 8px;
+      margin-bottom: 8px;
+    }
+
+    button:hover {
+      opacity: 0.85;
+    }
+
+    .note {
+      display: none;
+      margin-top: 10px;
+      background: #f1f1f1;
+      padding: 12px;
+      border-radius: 6px;
+      white-space: pre-wrap;
+    }
+
+    .textarea {
+      display: none;
+      width: 100%;
+      min-height: 120px;
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      box-sizing: border-box;
+    }
+
+    .error {
+      color: red;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h1>🏢 Private Property Notes</h1>
+
+  <input 
+    type="text" 
+    id="searchInput" 
+    class="search-box" 
+    placeholder="Search property name..."
+  />
+
+  <div id="listingContainer" class="listing-container"></div>
+
+  <div id="errorMsg" class="error"></div>
+
+  <script>
+    const jsonUrl = "https://kennethlai0523.github.io/MummyadminlistingPrivate/private_notes.json";
+
+    let allData = [];
+
+    fetch(jsonUrl)
+      .then(res => {
+        if (!res.ok) {
+          throw new Error("Failed to fetch JSON");
+        }
+        return res.json();
+      })
+      .then(data => {
+        allData = data;
+        renderListings(data);
+      })
+      .catch(err => {
+        console.error(err);
+        document.getElementById("errorMsg").textContent =
+          "❌ Failed to load data. Check your JSON file name, repo name, and GitHub Pages.";
+      });
+
+    function renderListings(data) {
+      const container = document.getElementById("listingContainer");
+      container.innerHTML = "";
+
+      if (data.length === 0) {
+        container.innerHTML = "<div class='card'>No matching property found.</div>";
+        return;
+      }
+
+      data.forEach((item) => {
+        const card = document.createElement("div");
+        card.className = "card";
+
+        const name = document.createElement("div");
+        name.className = "property-name";
+        name.textContent = item.name || "No property name";
+
+        const btnGroup = document.createElement("div");
+        btnGroup.className = "btn-group";
+
+        const openBtn = document.createElement("button");
+        openBtn.textContent = "Open";
+
+        const editBtn = document.createElement("button");
+        editBtn.textContent = "Edit";
+
+        const copyBtn = document.createElement("button");
+        copyBtn.textContent = "Copy";
+
+        const note = document.createElement("div");
+        note.className = "note";
+        note.textContent = item.note || "No private note";
+
+        const textarea = document.createElement("textarea");
+        textarea.className = "textarea";
+        textarea.value = item.note || "";
+
+        openBtn.onclick = () => {
+          if (note.style.display === "none" || note.style.display === "") {
+            note.style.display = "block";
+            textarea.style.display = "none";
+            openBtn.textContent = "Close";
+          } else {
+            note.style.display = "none";
+            openBtn.textContent = "Open";
+          }
+        };
+
+        editBtn.onclick = () => {
+          note.style.display = "none";
+          textarea.style.display = "block";
+          openBtn.textContent = "Open";
+        };
+
+        copyBtn.onclick = () => {
+          navigator.clipboard.writeText(item.note || "");
+          alert("Copied!");
+        };
+
+        btnGroup.appendChild(openBtn);
+        btnGroup.appendChild(editBtn);
+        btnGroup.appendChild(copyBtn);
+
+        card.appendChild(name);
+        card.appendChild(btnGroup);
+        card.appendChild(note);
+        card.appendChild(textarea);
+
+        container.appendChild(card);
+      });
+    }
+
+    document.getElementById("searchInput").addEventListener("input", function () {
+      const keyword = this.value.toLowerCase();
+
+      const filtered = allData.filter(item =>
+        (item.name || "").toLowerCase().includes(keyword)
+      );
+
+      renderListings(filtered);
+    });
+  </script>
+
+</body>
+</html>
